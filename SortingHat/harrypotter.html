@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html>
+
+
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-light nav-percent">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="#"><img src="../SortingHat/hat.jpg" alt="" class="icon2" width="40">Sorting Hat</a>
+    <button class="navbar-toggler collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav">
+        <li class="nav-item">
+          <a class="nav-link active" aria-current="page" href="#">Home</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#">Features</a>
+        </li>
+
+      </ul>
+    </div>
+  </div>
+</nav>
+<section class="section">
+    <h1 class="title">What is your dormitory?</h1>
+    <h2 class="subtitle">Harry Potter</h2>
+
+</section>
+<section class="github">
+    <div class="mt-5 github d-flex justify-content-center"><a href="https://github.com/Yuminkyeong/2022Pytorch.git" class="github-link">Yuminkyeong's Github</a><img src="../SortingHat/githubIcon.png" alt="" class="github-icon" width="40"></div>
+</section>
+
+<html>
+    <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link href="https://fonts.googleapis.com/css?family=Jua&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <title>The Sorting Hat</title>
+          <link rel="stylesheet" href="style.css">
+
+    </head>
+</html>
+   <script class="jsbin" src="https://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
+<div class="containter file-upload">
+<!--  <button class="file-upload-btn" type="button" onclick="$('.file-upload-input').trigger( 'click' )">Add Image</button>-->
+
+  <div class="image-upload-wrap">
+    <input class="file-upload-input" type='file' onchange="readURL(this);" accept="image/*" />
+    <div class="drag-text">
+      <h3 class="mtext">Drag and drop a file or select add Image</h3>
+    </div>
+  </div>
+  <div class="file-upload-content">
+    <img class="file-upload-image" id = "face-image" src="#" alt="your image" />
+      <p class="result-msg"></p>
+      <div id="label-container" class="container2"></div>
+
+    <div class="image-title-wrap">
+      <button type="button" onclick="removeUpload()" class="remove-image">Remove <span class="image-title">Uploaded Image</span></button>
+    </div>
+  </div>
+</div>
+
+<div id="webcam-container"></div>
+
+<!--bootstrap-->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/js/bootstrap.bundle.min.js" integrity="sha384-pprn3073KE6tl6bjs2QrFaJGz5/SUsLqktiwsUTF55Jfv3qYSDhgCecCxMW52nD2" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.5/dist/umd/popper.min.js" integrity="sha384-Xe+8cL9oJa6tN/veChSP7q+mnSPaj5Bcu9mPX5F5xIGE0DVittaqT5lorf0EI7Vk" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/js/bootstrap.min.js" integrity="sha384-kjU+l4N0Yf4ZOJErLsIcvOU2qSb74wXpOhqTvwVx3OElZRweTnQ6d31fXEoRD1Jy" crossorigin="anonymous"></script>
+<!--end-->
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.3.1/dist/tf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8/dist/teachablemachine-image.min.js"></script>
+
+   <script>
+       function readURL(input) {
+  if (input.files && input.files[0]) {
+
+    var reader = new FileReader();
+
+    reader.onload = function(e) {
+      $('.image-upload-wrap').hide();
+
+      $('.file-upload-image').attr('src', e.target.result);
+      $('.file-upload-content').show();
+
+      $('.image-title').html(input.files[0].name);
+    };
+
+    reader.readAsDataURL(input.files[0]);
+    init().then(()=>{
+    console.log("model load");
+     predict();})
+
+
+  } else {
+    removeUpload();
+  }
+}
+
+function removeUpload() {
+  $('.file-upload-input').replaceWith($('.file-upload-input').clone());
+  $('.file-upload-content').hide();
+  $('.image-upload-wrap').show();
+}
+$('.image-upload-wrap').bind('dragover', function () {
+		$('.image-upload-wrap').addClass('image-dropping');
+	});
+	$('.image-upload-wrap').bind('dragleave', function () {
+		$('.image-upload-wrap').removeClass('image-dropping');
+});
+
+</script>
+
+<script type="text/javascript">
+    // More API functions here:
+    // https://github.com/googlecreativelab/teachablemachine-community/tree/master/libraries/image
+
+    // the link to your model provided by Teachable Machine export panel
+    const URL = "https://teachablemachine.withgoogle.com/models/7lq9EiSCx/";
+
+    let model, webcam, labelContainer, maxPredictions;
+
+    // Load the image model and setup the webcam
+    async function init() {
+        const modelURL = URL + "model.json";
+        const metadataURL = URL + "metadata.json";
+
+        // load the model and metadata
+        // Refer to tmImage.loadFromFiles() in the API to support files from a file picker
+        // or files from your local hard drive
+        // Note: the pose library adds "tmImage" object to your window (window.tmImage)
+        model = await tmImage.load(modelURL, metadataURL);
+        maxPredictions = model.getTotalClasses();
+
+        // append elements to the DOM
+
+        labelContainer = document.getElementById("label-container");
+        for (let i = 0; i < maxPredictions; i++) { // and class labels
+            labelContainer.appendChild(document.createElement("div"));
+        }
+    }
+
+
+
+    // run the webcam image through the image model
+    async function predict() {
+        // predict can take in an image, video or canvas html element
+        var image =  document.getElementById("face-image")
+        const prediction = await model.predict(image, false);
+        prediction.sort((a,b)=>parseFloat(b.probability) - parseFloat(a.probability));
+        console.log(prediction[0].className);
+        var resultMsg, msg2;
+        switch(prediction[0].className){
+            case "Gryffindor":
+            msg2="Gryffindor"
+            resultMsg = "The Brave, passionate and daring person"
+            break;
+            case "Slytherin":
+            msg2="Slytherin"
+            resultMsg = "Ingenuity of the purest bloodline"
+            break;
+            case "Ravenclaw":
+            msg2="Ravenclaw"
+            resultMsg = "The smart, wise and thoughtful person"
+            break;
+            case "Hufflepuff":
+            msg2="Hufflepuff"
+            resultMsg = "the one who is truthful and not lies"
+            break;
+            default:
+            resultMsg="None"
+        }
+        var title = "<div class='dormitory-explain pt-2'" + prediction[0].className + "-animal-title'>" + msg2 + "</div>"
+        var explain = "<div class='dormitory-explain pt-2'>" + resultMsg + "</div>"
+        $('.result-msg').html(title+explain);
+        var barWidth;
+        for (let i = 0; i < maxPredictions; i++) {
+<!--            const classPrediction =-->
+<!--                prediction[i].className + ": " + prediction[i].probability.toFixed(2);-->
+<!--            labelContainer.childNodes[i].innerHTML = classPrediction;-->
+ if (prediction[i].probability.toFixed(2) > 0.1) {
+                    barWidth = Math.round(prediction[i].probability.toFixed(2) * 100) + "%";
+                } else if (prediction[i].probability.toFixed(2) >= 0.01) {
+                    barWidth = "4%"
+                } else {
+                    barWidth = "2%"
+                }
+                var labelTitle;
+                switch (prediction[i].className) {
+                    case "Gryffindor":
+                        labelTitle = "Gryffindor"
+                        break;
+                    case "Slytherin":
+                        labelTitle = "Slytherin"
+                        break;
+                    case "Ravenclaw":
+                        labelTitle = "Ravenclaw"
+                        break;
+                    case "Hufflepuff":
+                        labelTitle = "Hufflepuff"
+                        break;
+                    default:
+                        labelTitle = "none"
+                }
+                var label = "<div class='dorm-label d-flex align-items-center'>" + labelTitle + "</div>"
+                var bar = "<div class='bar-container position-relative container'><div class='" + prediction[i].className + "-box'></div><div class='d-flex justify-content-center align-items-center " + prediction[i].className + "-bar' style='width: " + barWidth + "'><span class='d-block percent-text'>" + Math.round(prediction[i].probability.toFixed(2) * 100) + "%</span></div></div>"
+                labelContainer.childNodes[i].innerHTML = label + bar;
+        }
+    }
+</script>
+
+</body>
+
+
+</html>
